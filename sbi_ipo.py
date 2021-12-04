@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from time import sleep
 import re
+from selenium.webdriver.chrome.options import Options
 
 #ログイン情報
 uid = "***"
@@ -10,7 +11,9 @@ suryo = 100
 #取引パスワード
 trpw = "***"
 
-driver = webdriver.Chrome()
+chrome_options = Options()
+chrome_options.add_argument('--headless')
+driver = webdriver.Chrome(options=chrome_options)
 
 url = 'https://www.sbisec.co.jp/ETGate'
 driver.get(url)
