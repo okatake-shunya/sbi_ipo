@@ -30,32 +30,44 @@ sleep(3)
 driver.get("https://m.sbisec.co.jp/oeliw011?type=21")
 text_top = driver.page_source
 
+error_count = 0
+i = 0
 #証券コードで絞る
 results = re.findall("（(\d{4})）",text_top)
 for r in results:
     ipo_url = "/oeapw011?type=21&amp;p_cd=%s" % r
     if (ipo_url in text_top):
-        driver.get(f"https://m.sbisec.co.jp/oeapw011?type=21&p_cd={r}")
+        driver.get("https://m.sbisec.co.jp/oeapw011?type=21&p_cd=%s" % r)
         text_r = driver.page_source
         if ("申込受付期間外" in text_r) or ("お申し込み済み" in text_r):
+            print('時間外です')
             continue
         else:
-        #IPO注文
-        driver.find_element(By.NAME, "suryo").send_keys(100)
-        driver.find_element(By.ID, "strPriceRadio").click()
-        driver.find_element(By.ID, "ipoRadio1").click()
+            #IPO注文
+            driver.find_element(By.NAME, "suryo").send_keys(suryo)
+            driver.find_element(By.ID, "strPriceRadio").click()
+            driver.find_element(By.ID, "ipoRadio1").click()
 
-        driver.find_element(By.NAME, "tr_pass").send_keys("trpw")
-        driver.find_element(By.NAME, "order_kakunin").click()
-        sleep(2)
-        driver.find_element(By.NAME, "order_btn").click()
-        sleep(3)
-
-
+            driver.find_element(By.NAME, "tr_pass").send_keys(trpw)
+            driver.find_element(By.NAME, "order_kakunin").click()
+            sleep(2)
+            #重要なお知らせがあり、IPO投資ができない場合に通知させる。
+            if i == 0:
+                text_error = driver.page_source
+                error_msg = "本サービスをご利用いただくことができません"
+                if re.compile(error_msg).search(text_error):
+                    error_count +=1
+                    break
+                
+            driver.find_element(By.NAME, "order_btn").click()
+            i +=1
+            sleep(3)
 
 import requests
 
 hit_count = 0
+
+driver.get("https://m.sbisec.co.jp/oeliw011?type=21")
 
 for i in range(50):
     if i % 2 == 1:
@@ -64,9 +76,14 @@ for i in range(50):
         if "当選" in ipo_result_text:
             hit_count +=1
 
-if hit_count > 0:
+if hit_count > 0 or error_count > 0:
     def main():
-        send_line_notify(f'SBI証券でIPOの当選があります。{hit_count}')
+        if hit_count > 0 and error_count > 0:
+            send_line_notify(f'SBI証券でIPO{hit_count}の当選があります。,重要なお知らせがあり、投資できませんでした。')
+        elif error_count > 0:
+            send_line_notify('重要なお知らせがあり、投資できませんでした。')
+        elif hit_count > 0:
+            send_line_notify(f'SBI証券で{hit_count}のIPOの当選があります。')
 
     def send_line_notify(notification_message):
         #LINEに通知する
