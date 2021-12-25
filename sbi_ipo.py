@@ -67,27 +67,34 @@ import requests
 
 hit_count = 0
 
-driver.get("https://m.sbisec.co.jp/oeliw011?type=21")
+driver.get("https://m.sbisec.co.jp/switchnaviMain")
 
-for i in range(50):
+resulet_count = len(results * 2)
+for i in range(resulet_count):
     if i % 2 == 1:
         ipo_result = driver.find_element(By.XPATH, f"/html/body/table/tbody/tr/td/table[1]/tbody/tr/td/table[1]/tbody/tr[1]/td/div[2]/table[{i}]/tbody/tr/td/table/tbody/tr[5]/td[2]")
         ipo_result_text  = str(ipo_result.text)
         if "当選" in ipo_result_text:
             hit_count +=1
+            print("当選しました")
+
+if hit_count == 0:
+    print("当選してません")
 
 if hit_count > 0 or error_count > 0:
     def main():
         if hit_count > 0 and error_count > 0:
-            send_line_notify(f'SBI証券でIPO{hit_count}の当選があります。,重要なお知らせがあり、投資できませんでした。')
+            send_line_notify(f'SBI証券でIPOの当選があります。{hit_count},重要なお知らせがあり、投資できませんでした。')
         elif error_count > 0:
             send_line_notify('重要なお知らせがあり、投資できませんでした。')
         elif hit_count > 0:
-            send_line_notify(f'SBI証券で{hit_count}のIPOの当選があります。')
+            send_line_notify(f'SBI証券でIPOの当選があります。{hit_count}')
 
     def send_line_notify(notification_message):
-        #LINEに通知する
-        line_notify_token = "発行したトークンを入力"
+        """
+        LINEに通知する
+        """
+        line_notify_token = '発行したトークンを入力'
         line_notify_api = 'https://notify-api.line.me/api/notify'
         headers = {'Authorization': f'Bearer {line_notify_token}'}
         data = {'message': f'message: {notification_message}'}
@@ -95,6 +102,5 @@ if hit_count > 0 or error_count > 0:
 
     if __name__ == "__main__":
         main()
-
 
 driver.quit()
